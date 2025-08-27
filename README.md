@@ -1,14 +1,52 @@
 *Note before reading: There's some stuff that's un-fully-implemented as I've kept working through the summer on the project to keep myself active while on vacation. Mostly involves swapping some dictionary bulding stuff into pydantic for faster processing and further data usage for the models. I've added an "evidences" folder for proof that the project I turned in does work.*
 
 # TFG - Trabajo de fin de grado: Machine learning model to predict the outcome of professional e-sports League of Legends matches
-## Requirements:
-- Python 3 or higher
-- MongoDB
-- Pre-trained model
-- Oracle's Elixir CSV's (downloadable and updatable through CSVUpdater.py and the frontend)
+## 📦 Requirements
+- Python 3.9+  
+- MongoDB  
+- Oracle’s Elixir CSV datasets (downloadable & updatable via `CSVUpdater.py`)  
+- Pretrained models (RandomForest, XGBoost).  
+  
 ## How does it work:
 ### A general view:
-![Description](images/basic_schema.png)
+![Description](basic_schema.JPG)
 
-- RestAPI.py contains a Flask application (Rest API) that has includes /get_all_predictions -> which if queried with the appropiate draft data will return the winrate percentages predicted for each model (RandomForest and XGBoost)
-  
+- With `CSVUpdater.py`, Oracle's Elixir datasets are automatically downloaded or updated.
+- The two models are trained using the data collected from these datasets, using all matches from 2014 to 2025 (excluding malformed ones). This data is then processed and indexed into a local mongoDB instance.
+- RestAPI.py contains a Flask application (Rest API) that has includes `POST /get_all_predictions`, which if queried with the appropiate draft data will return the winrate percentages predicted for each model (RandomForest and XGBoost).
+- The frontend displays the resulting predicted values.
+
+### Available API endpoints:
+#### Team-related ones:
+- `GET /get_team_won_lost/<team_name>`: Returns the amount of games won and lost by the given team.
+- `GET /get_team_stats/<team_name>`: Returns a number of archived team statistics, such as avg. gamelength, each objective averages (dragons, barons, heralds, towers and inhibitors), avg. kills, etc... - they are all filtered by side (Blue, Red).
+- `GET /get_teams_in_league/<league_name>`: Returns a list with the names of the teams that are in a given league.
+#### Player-related ones:
+- `GET /get_played_champions/<player_name>`: Returns a list with the names of the champions that the given pro-player has played.
+- `GET /get_champion_specific_stats_by_player/<champion_name>/<player_name>`: Returns the by-champion stats that the given pro-player has.
+- `GET /get_player_kda/<player_name>`: Returns the general player KDA (Kills, Deaths and Assists).
+- `GET /get_player_basic_stats/<player_name>`: Returns basic stats, such as the KDA and how many won and lost games for the given player.
+- `GET /get_players_in_team/<team_name>`: Returns a list with the names of the players in the given team.
+#### Basic info:
+- `GET /get_available_leagues`: Returns a list with the names of the archived leagues.
+- `GET /get_available_champions`: Returns a list with the names of all champions.
+- `GET /debug-info`: Returns important debug information about the project, such as: when where the models last trained, when did the last match saved take place, and other relevant information about the indexed data.
+#### Others:
+- `GET /handshake`: Simple alive ping to prevent the frontend from loading in case the Flask application is not running.
+- `GET /force-update/<update_mode>`: Updates the relevant datasets and MongoCollections. The `update_modes` are the following:
+  - 0: Updates all CSVs and relevant MongoCollections
+  - 1: Only updates all CSVs.
+  - 2: Only updates current year's CSV.
+  - 3: Updates all available MongoCollections - without re-downloading the CSVs.
+  - 4: Updates only the matches collection.
+  - 5: Updates only the pro-player collection.
+  - 6: Updates only the team collection.
+  - 7: Updates only the training entries collection.
+- `POST /get_all_predictions`: Returns the predicted values by the models. Needs to be queried with the appropiate format:
+
+
+### Project structure:
+
+### Planned improvements:
+- Migration from dictionary-based processing → Pydantic models for faster validation.
+- Additional (and more detailed) data usage within models.
