@@ -1,0 +1,219 @@
+#blueside {
+    display: flex; 
+    flex-direction: column; 
+    width: 48%; 
+    background-color: blue; 
+    padding: 5px;
+}
+
+#selector-wrapper {
+    display: flex; 
+    justify-content: space-between; 
+    width: 100%;
+}
+
+#blueside-league-selector,
+#redside-league-selector {
+    width: 25%; 
+    margin-right: 5px;
+}
+
+#blueside-team-selector,
+#redside-team-selector {
+    width: 75%;
+}
+
+.stat-label {
+    padding: 12px 16px;
+    font-weight: 600;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    color: #343a40;
+    text-align: left;
+    width: 60%;
+}
+
+.stat-value {
+    padding: 12px 16px;
+    background-color: #ffffff;
+    border-bottom: 1px solid #dee2e6;
+    color: #212529;
+    text-align: right;
+    font-weight: 500;
+}
+
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f4f4;
+  }
+
+  .header {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 12px 24px;
+    background-color: #1e1e2f;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  }
+
+  .header button {
+    margin-right: 16px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+
+  #predict-btn {
+    background-color: #4caf50;
+    color: white;
+  }
+
+  #predict-btn:hover {
+    background-color: #45a049;
+  }
+
+  #reset-btn {
+    background-color: #2196f3;
+    color: white;
+  }
+
+  #reset-btn:hover {
+    background-color: #1e88e5;
+  }
+
+  #clear-btn {
+    background-color: #f44336;
+    color: white;
+  }
+
+  #clear-btn:hover {
+    background-color: #e53935;
+  }
+
+  .table-subheading {
+    font-size: 0.9em;
+    font-weight: bold;
+    color: gray;
+  }
+
+  .global-stat{
+    color:#104b80
+  }
+
+.prediction-card {
+  margin: 30px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  font-family: 'Segoe UI', sans-serif;
+  color: #333;
+
+  flex: 0 0 30%;      /* fixed 35% width, no grow/shrink */
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.debug-card {
+  margin: 30px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  font-family: 'Segoe UI', sans-serif;
+  color: #333;
+
+  flex: 1 1 70%;      /* can grow/shrink, basis 65% */
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.team-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.team {
+  width: 48%;
+  border-radius: 8px;
+  padding: 16px;
+  color: #fff;
+}
+
+.team.blue {
+  background: linear-gradient(135deg, #3b5bdb, #4c6ef5);
+}
+
+.team.red {
+  background: linear-gradient(135deg, #fa5252, #ff6b6b);
+}
+
+.team h2 {
+  margin: 0 0 10px;
+  font-size: 20px;
+}
+
+.team p {
+  margin: 4px 0;
+  font-size: 16px;
+}
+
+.model-section p {
+  font-weight: bold;
+  margin-top: 16px;
+}
+
+
+
+  .debug-card {
+    background-color: #f8f9fa;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    padding: 20px 25px;
+    width: fit-content;
+    max-width: 100%;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  }
+
+  .debug-info {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .debug-info li {
+    margin-bottom: 12px;
+    font-size: 16px;
+    color: #333;
+  }
+
+  .button-row {
+    margin-top: 20px;
+  }
+
+  .button-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .button-group button {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+  }
+
+  .button-group button:hover {
+    background-color: #0056b3;
+  }

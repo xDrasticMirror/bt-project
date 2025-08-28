@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>Myndra</title>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/prediction-panel.css">
+    <link rel="stylesheet" href="../css/team-panel.css">
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="header">
+        <button id="predict-btn">Predict</button>
+    </div>
+
+    <div id="alert-container" style="position: relative; margin-bottom: 1rem;"></div>
+
+    <div style="max-width: 100%; margin: 1rem;">
+        <details>
+            <summary style="font-weight: bold; cursor: pointer;">Debug Info</summary>
+            <div>
+            <div style="display:flex; gap: 10px;">
+                <div class="prediction-card">
+                    <div class="team-row">
+                        <div class="team blue">
+                            <h2 id='blueside-prediction-team-name'>Blueside team</h2>
+                            <p id='blueside-prediction-rf-percent'><strong>RandomForest:</strong> 00.00%</p>
+                            <p id='blueside-prediction-xgb-percent'><strong>XGBoost:</strong> 00.00%</p>
+                        </div>
+                        <div class="team red">
+                            <h2 id='redside-prediction-team-name'>Redside team</h2>
+                            <p id='redside-prediction-rf-percent'><strong>RandomForest:</strong> 00.00%</p>
+                            <p id='redside-prediction-xgb-percent'><strong>XGBoost:</strong> 00.00%</p>
+                        </div>
+                    </div>
+
+                    <div class="model-section">
+                        <p id='rf-text'>Random Forest Model</p>
+                        <div class="bar-container">
+                            <div class="bar blue" id='blueside-prediction-rf-bar' style="width: 0%"></div>
+                            <div class="bar red" id='redside-prediction-rf-bar' style="width: 0%"></div>
+                        </div>
+
+                        <p id='xgb-text'>XGBoost Model</p>
+                        <div class="bar-container">
+                            <div class="bar blue" id='blueside-prediction-xgb-bar' style="width: 0%"></div>
+                            <div class="bar red" id='redside-prediction-xgb-bar' style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="debug-card">
+                    <ul class="debug-info">
+                        <li id="last-rf"><strong>Last RandomForest model:</strong></li>
+                        <li id="last-xgb"><strong>Last XGBoost model:</strong></li>
+                        <li id="last-db"><strong>Last match in the DB:</strong></li>
+                        <li id="match-count"><strong>Number of matches saved:</strong></li>
+                        <li id="2025-match-count"><strong>Number of 2025 matches saved:</strong></li>
+                        <li id="player-count"><strong>Number of players saved:</strong></li>
+                        <li id="team-count"><strong>Number of teams saved:</strong></li>
+
+                        <li class="button-row">
+                            <div class="button-group">
+                                <button id="all-year-update">Force all-year CSV update</button>
+                                <button id="last-year-update">Force last year CSV update</button>
+                            </div>
+                        </li>
+
+                        <li class="button-row">
+                            <div class="button-group">
+                                <button id="match-indexing">Force match re-indexing</button>
+                                <button id="player-indexing">Force player re-indexing</button>
+                                <button id="team-indexing">Force team re-indexing</button>
+                                <button id="training-entry-indexing">Force training entries re-indexing</button>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            </div>
+        </details>
+    </div>
+
+
+
+
+    <div style="display: inline-flex; width: 100%;">
+        <!-- Blueside container -->
+        <div style="margin:1rem 0.5rem 1rem 1rem;width: 100%;">
+            <div id="selector-wrapper" style="display: flex; justify-content: space-between; gap: 20px; margin-bottom: 15px;">
+                <select class="form-select" id="blueside-league-selector" style="padding: 10px; border-radius: 8px; border: 1px solid #ddd; background-color: #fff; font-size: 16px; color: #333;">
+                    <option value="" style="color: #777;">Select League</option>
+                </select>
+                <select class="form-select" id="blueside-team-selector" style="padding: 10px; border-radius: 8px; border: 1px solid #ddd; background-color: #fff; font-size: 16px; color: #333;">
+                    <option value="" style="color: #777;">Select Team</option>
+                </select>
+            </div>
+
+            <div class="card shadow">
+                <div class="card-header text-white" data-bs-toggle="collapse" data-bs-target="#bluePanel" style="cursor: pointer; font-weight: bolder; background-color: #0d6efd;">
+                    Blueside team
+                </div>
+
+                <div id="bluePanel" class="collapse show">
+                    <div class="card-body">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tbody>
+                                <tr>
+                                    <td style="font-weight: bold;">Wins / Losses</td>
+                                    <td id="blueside-wl">-</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: bold;">Win Rate</td>
+                                    <td id="blueside-winrate">-</td>
+                                </tr>
+                                <tr class="table-subheading">
+                                    <td> • Blue side winrate: </td>
+                                    <td id="blueside-blue-side-winrate"> - </td>
+                                </tr>  
+                                <tr class="table-subheading">
+                                    <td> • Red side winrate: </td>
+                                    <td id="blueside-red-side-winrate"> - </td>
+                                </tr>  
+                                <tr>
+                                    <td style="font-weight: bold;">Games Played</td>
+                                    <td id="blueside-games-played">-</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: bold;">Average game length (min)</td>
+                                    <td id="blueside-avg-game-length">-</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: bold;">Average dragons per Game</td>
+                                    <td id="blueside-avg-dragons">-</td>
+                                </tr>
+                                <tr class="table-subheading global-stat">
+                                    <td> • Global average dragons per game: </td>
+                                    <td id="blueside-g-avg-dragons"> - </td>
+                                </tr> 
+                                <tr>
+                                    <td style="font-weight: bold;">Average barons per game</td>
+                                    <td id="blueside-avg-barons">-</td>
+                                </tr>
+                                <tr class="table-subheading global-stat">
+                                    <td> • Global average barons per game: </td>
+                                    <td id="blueside-g-avg-barons"> - </td>
+                                </tr>  
+                                <tr>
+                                    <td style="font-weight: bold;">Average heralds per game</td>
+                                    <td id="blueside-avg-heralds">-</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: bold;">Average towers destroyed</td>
+                                    <td id="blueside-avg-towers">-</td>
+                                </tr>
+                                <tr class="table-subheading global-stat">
+                                    <td> • Global average towers per game: </td>
+                                    <td id="blueside-g-avg-towers"> - </td>
+                                </tr>
+                                <tr class="table-subheading">
+                                    <td> • Average turret plates taken: </td>
+                                    <td id="blueside-tp-taken"> - </td>
+                                </tr>
+                                <tr class="table-subheading">
+                                    <td> • First tower percentage: </td>
+                                    <td id="blueside-ft-percentage"> - </td>
+                                </tr>
+                                <tr class="table-subheading">
+                                    <td> • First mid tower percentage: </td>
+                                    <td id="blueside-fmt-percentage"> - </td>
+                                </tr>
+                                <tr class="table-subheading">
+                                    <td> • First to three towers percentage:</td>
+                                    <td id="blueside-fttt-percentage"> - </td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: bold;">Average kills</td>
+                                    <td id="blueside-avg-kills">-</td>
+                                </tr>
+                                <tr class="table-subheading global-stat">
+                                    <td> • Global average kills:</td>
+                                    <td id="blueside-g-avg-kills"> - </td>
+                                </tr>
+                                <tr class="table-subheading">
+                                    <td> • First blood percentage:</td>
+                                    <td id="blueside-fb-percentage"> - </td>
+                                </tr>
+                                <tr class="table-subheading">
+                                    <td> • First blood victim percentage:</td>
+                                    <td id="blueside-fbv-percentage"> - </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top player -->
+            <div style="margin-top: 1rem;">
+                <td style="border: 1px solid #e0e0e0; padding: 10px; border-radius: 12px; width: 100%; margin-top: 1rem; background-color: #f9f9f9; box-sizing: border-box;">
+                    <!-- Player Name Table -->
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr>
+                                <th colspan="3" style="border: 1px solid #ddd; padding: 10px; text-align: center; background-color: #007bff; color: white; font-size: 18px; border-radius: 8px;" id="blueside-top-player-name">Top</th>
+                            </tr>
+                        </thead>
+                    </table>
+                
+                    <div style="margin-top: 0.5rem; margin-bottom: 0.5rem;">
+                        <select id="blueside-top-champion-select" style="width: 100%; padding: 0.5rem; border-radius: 8px; border: 1px solid #ddd; background-color: #fff; font-size: 16px; color: #333;">
+                            <option value="" style="color: #777;">Select Champion</option>
+                        </select>
+                    </div>
+                
+                    <!-- Container for Game Stats + KDA -->
+                    <div style="display: flex; flex-direction: row; gap: 1rem; margin-top: 1rem;">
+                        <!-- Game Stats Table -->
+                        <table style="border-collapse: collapse; flex: 1; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);">
+                            <thead>
+                                <tr>
+                                    <th colspan="3" style="border: 1px solid #ddd; padding: 10px; background-color: #007bff; color: white; text-align: center; border-radius: 8px;">Game Stats</th>
+                                </tr>
+                            </thead>
+                            <tr>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Wins</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Loses</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Games Played</th>
+                            </tr>
+                            <tr>
+                                <th style="text-align: start; padding: 10px;" id="blueside-top-player-wins">Wins</th>
+                                <th style="text-align: start; padding: 10px;" id="blueside-top-player-loses">Loses</th>
+                                <th style="text-align: start; padding: 10px;" id="blueside-top-player-games-played">Games played</th>
+                            </tr>
+                        </table>
+                
+                        <!-- KDA Table -->
+                        <table style="border-collapse: collapse; flex: 1; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);">
+                            <thead>
+                                <tr>
+                                    <th colspan="3" style="border: 1px solid #ddd; padding: 10px; background-color: #007bff; color: white; text-align: center; border-radius: 8px;">KDA</th>
+                                </tr>
+                            </thead>
+                            <tr>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Kills</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Deaths</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Assists</th>
+                            </tr>
+                            <tr>
+                                <th style="text-align: start; padding: 10px;" id="blueside-top-player-kills">Kills</th>
+                                <th style="text-align: start; padding: 10px;" id="blueside-top-player-deaths">Deaths</th>
+                                <th style="text-align: start; padding: 10px;" id="blueside-top-player-assists">Assists</th>
+                            </tr>
+                        </table>
+                    </div>
+                
+                    <!-- Container for Champion-Specific Stats -->
+                    <div style="display: flex; flex-direction: row; gap: 1rem; margin-top: 1rem;">
+                        <!-- Champion Stats Table -->
+                        <table style="border-collapse: collapse; flex: 1; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);">
+                            <thead>
+                                <tr>
+                                    <th colspan="3" style="border: 1px solid #ddd; padding: 10px; background-color: #007bff; color: white; text-align: center; border-radius: 8px;">Champion Stats</th>
+                                </tr>
+                            </thead>
+                            <tr>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Kills</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Wins</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Games Played</th>
+                            </tr>
+                            <tr>
+                                <th style="text-align: start; padding: 10px;" id="blueside-top-champion-kills">Kills</th>
+                                <th style="text-align: start; padding: 10px;" id="blueside-top-champion-wins">Wins</th>
+                                <th style="text-align: start; padding: 10px;" id="blueside-top-champion-games-played">Games played</th>
+                            </tr>
+                        </table>
+                
+                        <!-- Additional Champion Metrics Table -->
+                        <table style="border-collapse: collapse; flex: 1; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);">
+                            <thead>
+                                <tr>
+                                    <th colspan="3" style="border: 1px solid #ddd; padding: 10px; background-color: #007bff; color: white; text-align: center; border-radius: 8px;">Additional Champion Metrics</th>
+                                </tr>
+                            </thead>
+                            <tr>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Average KDA</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Win Rate</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Pick Rate</th>
+                            </tr>
+                            <tr>
+                                <th style="text-align: start; padding: 10px;" id="blueside-top-champion-average-kda">KDA</th>
+                                <th style="text-align: start; padding: 10px;" id="blueside-top-champion-win-rate">Win Rate</th>
+                                <th style="text-align: start; padding: 10px;" id="blueside-top-champion-pick-rate">Pick Rate</th>
+                            </tr>
+                        </table>
+                    </div>
+                </td>
+            </div>
+
+            <!-- Jungle player -->
+            <div style="margin-top: 1rem;">
+                <td style="border: 1px solid #e0e0e0; padding: 10px; border-radius: 12px; width: 100%; margin-top: 10px; background-color: #f9f9f9; box-sizing: border-box;">
+                    <!-- Player Name Table -->
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr>
+                                <th colspan="3" style="border: 1px solid #ddd; padding: 10px; text-align: center; background-color: #28a745; color: white; font-size: 18px; border-radius: 8px;" id="blueside-jng-player-name">Jungle</th>
+                            </tr>
+                        </thead>
+                    </table>
+
+                    <div style="margin-top: 0.5rem; margin-bottom: 0.5rem;">
+                        <select id="blueside-jng-champion-select" style="width: 100%; padding: 0.5rem; border-radius: 8px; border: 1px solid #ddd; background-color: #fff; font-size: 16px; color: #333;">
+                            <option value="" style="color: #777;">Select Champion</option>
+                        </select>
+                    </div>
+
+                    <!-- Container for Game Stats + KDA -->
+                    <div style="display: flex; flex-direction: row; gap: 1rem; margin-top: 1rem;">
+                        <!-- Game Stats Table -->
+                        <table style="border-collapse: collapse; flex: 1; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);">
+                            <thead>
+                                <tr>
+                                    <th colspan="3" style="border: 1px solid #ddd; padding: 10px; background-color: #28a745; color: white; text-align: center; border-radius: 8px;">Game Stats</th>
+                                </tr>
+                            </thead>
+                            <tr>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Wins</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Loses</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Games Played</th>
+                            </tr>
+                            <tr>
+                                <th style="text-align: start; padding: 10px;" id="blueside-jng-player-wins">Wins</th>
+                                <th style="text-align: start; padding: 10px;" id="blueside-jng-player-loses">Loses</th>
+                                <th style="text-align: start; padding: 10px;" id="blueside-jng-player-games-played">Games played</th>
+                            </tr>
+                        </table>
+
+                        <!-- KDA Table -->
+                        <table style="border-collapse: collapse; flex: 1; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);">
+                            <thead>
+                                <tr>
+                                    <th colspan="3" style="border: 1px solid #ddd; padding: 10px; background-color: #28a745; color: white; text-align: center; border-radius: 8px;">KDA</th>
+                                </tr>
+                            </thead>
+                            <tr>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Kills</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Deaths</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Assists</th>
+                            </tr>
+                            <tr>
+                                <th style="text-align: start; padding: 10px;" id="blueside-jng-player-kills">Kills</th>
+                                <th style="text-align: start; padding: 10px;" id="blueside-jng-player-deaths">Deaths</th>
+                                <th style="text-align: start; padding: 10px;" id="blueside-jng-player-assists">Assists</th>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- Container for Champion-Specific Stats -->
+                    <div style="display: flex; flex-direction: row; gap: 1rem; margin-top: 1rem;">
+                        <!-- Champion Stats Table -->
+                        <table style="border-collapse: collapse; flex: 1; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);">
+                            <thead>
+                                <tr>
+                                    <th colspan="3" style="border: 1px solid #ddd; padding: 10px; background-color: #28a745; color: white; text-align: center; border-radius: 8px;">Champion Stats</th>
+                                </tr>
+                            </thead>
+                            <tr>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Kills</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Wins</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Games Played</th>
+                            </tr>
+                            <tr>
+                                <th style="text-align: start; padding: 10px;" id="blueside-jng-champion-kills">Kills</th>
+                                <th style="text-align: start; padding: 10px;" id="blueside-jng-champion-wins">Wins</th>
+                                <th style="text-align: start; padding: 10px;" id="blueside-jng-champion-games-played">Games played</th>
+                            </tr>
+                        </table>
+
+                        <!-- Additional Champion Metrics Table -->
+                        <table style="border-collapse: collapse; flex: 1; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);">
+                            <thead>
+                                <tr>
+                                    <th colspan="3" style="border: 1px solid #ddd; padding: 10px; background-color: #28a745; color: white; text-align: center; border-radius: 8px;">Additional Champion Metrics</th>
+                                </tr>
+                            </thead>
+                            <tr>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Average KDA</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Win Rate</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Pick Rate</th>
+                            </tr>
+                            <tr>
+                                <th style="text-align: start; padding: 10px;" id="blueside-jng-champion-average-kda">KDA</th>
+                                <th style="text-align: start; padding: 10px;" id="blueside-jng-champion-win-rate">Win Rate</th>
+                                <th style="text-align: start; padding: 10px;" id="blueside-jng-champion-pick-rate">Pick Rate</th>
+                            </tr>
+                        </table>
+                    </div>
+                </td>
+            </div>
+
+            <!-- Midlane player -->
+            <div style="margin-top: 1rem;">
+                <td style="border: 1px solid #e0e0e0; padding: 10px; border-radius: 12px; width: 100%; margin-top: 10px; background-color: #f9f9f9; box-sizing: border-box;">
+                    <!-- Player Name Table -->
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr>
+                                <th colspan="3" style="border: 1px solid #ddd; padding: 10px; text-align: center; background-color: #6610f2; color: white; font-size: 18px; border-radius: 8px;" id="blueside-mid-player-name">Mid</th>
+                            </tr>
+                        </thead>
+                    </table>
+
+                    <div style="margin-top: 0.5rem; margin-bottom: 0.5rem;">
+                        <select id="blueside-mid-champion-select" style="width: 100%; padding: 0.5rem; border-radius: 8px; border: 1px solid #ddd; background-color: #fff; font-size: 16px; color: #333;">
+                            <option value="" style="color: #777;">Select Champion</option>
+                        </select>
+                    </div>
+
+                    <!-- Container for Game Stats + KDA -->
+                    <div style="display: flex; flex-direction: row; gap: 1rem; margin-top: 1rem;">
+                        <!-- Game Stats Table -->
+                        <table style="border-collapse: collapse; flex: 1; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);">
+                            <thead>
+                                <tr>
+                                    <th colspan="3" style="border: 1px solid #ddd; padding: 10px; background-color: #6610f2; color: white; text-align: center; border-radius: 8px;">Game Stats</th>
+                                </tr>
+                            </thead>
+                            <tr>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Wins</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Loses</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Games Played</th>
+                            </tr>
+                            <tr>
+                                <th style="text-align: start; padding: 10px;" id="blueside-mid-player-wins">Wins</th>
+                                <th style="text-align: start; padding: 10px;" id="blueside-mid-player-loses">Loses</th>
+                                <th style="text-align: start; padding: 10px;" id="blueside-mid-player-games-played">Games played</th>
+                            </tr>
+                        </table>
+
+                        <!-- KDA Table -->
+                        <table style="border-collapse: collapse; flex: 1; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);">
+                            <thead>
+                                <tr>
+                                    <th colspan="3" style="border: 1px solid #ddd; padding: 10px; background-color: #6610f2; color: white; text-align: center; border-radius: 8px;">KDA</th>
+                                </tr>
+                            </thead>
+                            <tr>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Kills</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Deaths</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Assists</th>
+                            </tr>
+                            <tr>
+                                <th style="text-align: start; padding: 10px;" id="blueside-mid-player-kills">Kills</th>
+                                <th style="text-align: start; padding: 10px;" id="blueside-mid-player-deaths">Deaths</th>
+                                <th style="text-align: start; padding: 10px;" id="blueside-mid-player-assists">Assists</th>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- Container for Champion-Specific Stats -->
+                    <div style="display: flex; flex-direction: row; gap: 1rem; margin-top: 1rem;">
+                        <!-- Champion Stats Table -->
+                        <table style="border-collapse: collapse; flex: 1; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);">
+                            <thead>
+                                <tr>
+                                    <th colspan="3" style="border: 1px solid #ddd; padding: 10px; background-color: #6610f2; color: white; text-align: center; border-radius: 8px;">Champion Stats</th>
+                                </tr>
+                            </thead>
+                            <tr>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Kills</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Wins</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Games Played</th>
+                            </tr>
+                            <tr>
+                                <th style="text-align: start; padding: 10px;" id="blueside-mid-champion-kills">Kills</th>
+                                <th style="text-align: start; padding: 10px;" id="blueside-mid-champion-wins">Wins</th>
+                                <th style="text-align: start; padding: 10px;" id="blueside-mid-champion-games-played">Games played</th>
+                            </tr>
+                        </table>
+
+                        <!-- Additional Champion Metrics Table -->
+                        <table style="border-collapse: collapse; flex: 1; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);">
+                            <thead>
+                                <tr>
+                                    <th colspan="3" style="border: 1px solid #ddd; padding: 10px; background-color: #6610f2; color: white; text-align: center; border-radius: 8px;">Additional Champion Metrics</th>
+                                </tr>
+                            </thead>
+                            <tr>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Average KDA</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Win Rate</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Pick Rate</th>
+                            </tr>
+                            <tr>
+                                <th style="text-align: start; padding: 10px;" id="blueside-mid-champion-average-kda">KDA</th>
+                                <th style="text-align: start; padding: 10px;" id="blueside-mid-champion-win-rate">Win Rate</th>
+                                <th style="text-align: start; padding: 10px;" id="blueside-mid-champion-pick-rate">Pick Rate</th>
+                            </tr>
+                        </table>
+                    </div>
+                </td>
+            </div>
+
+            <!-- Botlane player -->
+            <div style="margin-top: 1rem;">
+                <td style="border: 1px solid #e0e0e0; padding: 10px; border-radius: 12px; width: 100%; margin-top: 10px; background-color: #f9f9f9; box-sizing: border-box;">
+                    <!-- Player Name Table -->
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr>
+                                <th colspan="3" style="border: 1px solid #ddd; padding: 10px; text-align: center; background-color: #e83e8c; color: white; font-size: 18px; border-radius: 8px;" id="blueside-bot-player-name">Bot</th>
+                            </tr>
+                        </thead>
+                    </table>
+
+                    <div style="margin-top: 0.5rem; margin-bottom: 0.5rem;">
+                        <select id="blueside-bot-champion-select" style="width: 100%; padding: 0.5rem; border-radius: 8px; border: 1px solid #ddd; background-color: #fff; font-size: 16px; color: #333;">
+                            <option value="" style="color: #777;">Select Champion</option>
+                        </select>
+                    </div>
+
+                    <!-- Container for Game Stats + KDA -->
+                    <div style="display: flex; flex-direction: row; gap: 1rem; margin-top: 1rem;">
+                        <!-- Game Stats Table -->
+                        <table style="border-collapse: collapse; flex: 1; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);">
+                            <thead>
+                                <tr>
+                                    <th colspan="3" style="border: 1px solid #ddd; padding: 10px; background-color: #e83e8c; color: white; text-align: center; border-radius: 8px;">Game Stats</th>
+                                </tr>
+                            </thead>
+                            <tr>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Wins</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Loses</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Games Played</th>
+                            </tr>
+                            <tr>
+                                <th style="text-align: start; padding: 10px;" id="blueside-bot-player-wins">Wins</th>
+                                <th style="text-align: start; padding: 10px;" id="blueside-bot-player-loses">Loses</th>
+                                <th style="text-align: start; padding: 10px;" id="blueside-bot-player-games-played">Games played</th>
+                            </tr>
+                        </table>
+
+                        <!-- KDA Table -->
+                        <table style="border-collapse: collapse; flex: 1; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);">
+                            <thead>
+                                <tr>
+                                    <th colspan="3" style="border: 1px solid #ddd; padding: 10px; background-color: #e83e8c; color: white; text-align: center; border-radius: 8px;">KDA</th>
+                                </tr>
+                            </thead>
+                            <tr>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Kills</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Deaths</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Assists</th>
+                            </tr>
+                            <tr>
+                                <th style="text-align: start; padding: 10px;" id="blueside-bot-player-kills">Kills</th>
+                                <th style="text-align: start; padding: 10px;" id="blueside-bot-player-deaths">Deaths</th>
+                                <th style="text-align: start; padding: 10px;" id="blueside-bot-player-assists">Assists</th>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- Container for Champion-Specific Stats -->
+                    <div style="display: flex; flex-direction: row; gap: 1rem; margin-top: 1rem;">
+                        <!-- Champion Stats Table -->
+                        <table style="border-collapse: collapse; flex: 1; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);">
+                            <thead>
+                                <tr>
+                                    <th colspan="3" style="border: 1px solid #ddd; padding: 10px; background-color: #e83e8c; color: white; text-align: center; border-radius: 8px;">Champion Stats</th>
+                                </tr>
+                            </thead>
+                            <tr>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Kills</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Wins</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Games Played</th>
+                            </tr>
+                            <tr>
+                                <th style="text-align: start; padding: 10px;" id="blueside-bot-champion-kills">Kills</th>
+                                <th style="text-align: start; padding: 10px;" id="blueside-bot-champion-wins">Wins</th>
+                                <th style="text-align: start; padding: 10px;" id="blueside-bot-champion-games-played">Games played</th>
+                            </tr>
+                        </table>
+
+                        <!-- Additional Champion Metrics Table -->
+                        <table style="border-collapse: collapse; flex: 1; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);">
+                            <thead>
+                                <tr>
+                                    <th colspan="3" style="border: 1px solid #ddd; padding: 10px; background-color: #e83e8c; color: white; text-align: center; border-radius: 8px;">Additional Champion Metrics</th>
+                                </tr>
+                            </thead>
+                            <tr>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Average KDA</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Win Rate</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Pick Rate</th>
+                            </tr>
+                            <tr>
+                                <th style="text-align: start; padding: 10px;" id="blueside-bot-champion-average-kda">KDA</th>
+                                <th style="text-align: start; padding: 10px;" id="blueside-bot-champion-win-rate">Win Rate</th>
+                                <th style="text-align: start; padding: 10px;" id="blueside-bot-champion-pick-rate">Pick Rate</th>
+                            </tr>
+                        </table>
+                    </div>
+                </td>
+            </div>
+
+            <!-- Support player -->
+            <div style="margin-top: 1rem;">
+                <td style="border: 1px solid #e0e0e0; padding: 10px; border-radius: 12px; width: 100%; margin-top: 10px; background-color: #f9f9f9; box-sizing: border-box;">
+                        <!-- Player Name Table -->
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr>
+                                    <th colspan="3" style="border: 1px solid #ddd; padding: 10px; text-align: center; background-color: #17a2b8; color: white; font-size: 18px; border-radius: 8px;" id="blueside-sup-player-name">Support</th>
+                                </tr>
+                            </thead>
+                        </table>
+
+                        <div style="margin-top: 0.5rem; margin-bottom: 0.5rem;">
+                            <select id="blueside-sup-champion-select" style="width: 100%; padding: 0.5rem; border-radius: 8px; border: 1px solid #ddd; background-color: #fff; font-size: 16px; color: #333;">
+                                <option value="" style="color: #777;">Select Champion</option>
+                            </select>
+                        </div>
+
+                        <!-- Container for Game Stats + KDA -->
+                        <div style="display: flex; flex-direction: row; gap: 1rem; margin-top: 1rem;">
+                            <!-- Game Stats Table -->
+                            <table style="border-collapse: collapse; flex: 1; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);">
+                                <thead>
+                                    <tr>
+                                        <th colspan="3" style="border: 1px solid #ddd; padding: 10px; background-color: #17a2b8; color: white; text-align: center; border-radius: 8px;">Game Stats</th>
+                                    </tr>
+                                </thead>
+                                <tr>
+                                    <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Wins</th>
+                                    <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Loses</th>
+                                    <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Games Played</th>
+                                </tr>
+                                <tr>
+                                    <th style="text-align: start; padding: 10px;" id="blueside-sup-player-wins">Wins</th>
+                                    <th style="text-align: start; padding: 10px;" id="blueside-sup-player-loses">Loses</th>
+                                    <th style="text-align: start; padding: 10px;" id="blueside-sup-player-games-played">Games played</th>
+                                </tr>
+                            </table>
+
+                            <!-- KDA Table -->
+                            <table style="border-collapse: collapse; flex: 1; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);">
+                                <thead>
+                                    <tr>
+                                        <th colspan="3" style="border: 1px solid #ddd; padding: 10px; background-color: #17a2b8; color: white; text-align: center; border-radius: 8px;">KDA</th>
+                                    </tr>
+                                </thead>
+                                <tr>
+                                    <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Kills</th>
+                                    <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Deaths</th>
+                                    <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Assists</th>
+                                </tr>
+                                <tr>
+                                    <th style="text-align: start; padding: 10px;" id="blueside-sup-player-kills">Kills</th>
+                                    <th style="text-align: start; padding: 10px;" id="blueside-sup-player-deaths">Deaths</th>
+                                    <th style="text-align: start; padding: 10px;" id="blueside-sup-player-assists">Assists</th>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <!-- Container for Champion-Specific Stats -->
+                        <div style="display: flex; flex-direction: row; gap: 1rem; margin-top: 1rem;">
+                            <!-- Champion Stats Table -->
+                            <table style="border-collapse: collapse; flex: 1; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);">
+                                <thead>
+                                    <tr>
+                                        <th colspan="3" style="border: 1px solid #ddd; padding: 10px; background-color: #17a2b8; color: white; text-align: center; border-radius: 8px;">Champion Stats</th>
+                                    </tr>
+                                </thead>
+                                <tr>
+                                    <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Kills</th>
+                                    <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Wins</th>
+                                    <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Games Played</th>
+                                </tr>
+                                <tr>
+                                    <th style="text-align: start; padding: 10px;" id="blueside-sup-champion-kills">Kills</th>
+                                    <th style="text-align: start; padding: 10px;" id="blueside-sup-champion-wins">Wins</th>
+                                    <th style="text-align: start; padding: 10px;" id="blueside-sup-champion-games-played">Games played</th>
+                                </tr>
+                            </table>
+
+                            <!-- Additional Champion Metrics Table -->
+                            <table style="border-collapse: collapse; flex: 1; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);">
+                                <thead>
+                                    <tr>
+                                        <th colspan="3" style="border: 1px solid #ddd; padding: 10px; background-color: #17a2b8; color: white; text-align: center; border-radius: 8px;">Additional Champion Metrics</th>
+                                    </tr>
+                                </thead>
+                                <tr>
+                                    <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Average KDA</th>
+                                    <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Win Rate</th>
+                                    <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Pick Rate</th>
+                                </tr>
+                                <tr>
+                                    <th style="text-align: start; padding: 10px;" id="blueside-sup-champion-average-kda">KDA</th>
+                                    <th style="text-align: start; padding: 10px;" id="blueside-sup-champion-win-rate">Win Rate</th>
+                                    <th style="text-align: start; padding: 10px;" id="blueside-sup-champion-pick-rate">Pick Rate</th>
+                                </tr>
+                            </table>
+                        </div>
+                </td>
+            </div>
+        </div>
+
+        <!-- Redside container -->
+        <div style="margin:1rem 1rem 1rem 0.5rem;width: 100%;">
+            <div id="selector-wrapper" style="display: flex; justify-content: space-between; gap: 20px; margin-bottom: 15px;">
+                <select class="form-select" id="redside-league-selector" style="padding: 10px; border-radius: 8px; border: 1px solid #ddd; background-color: #fff; font-size: 16px; color: #333;">
+                    <option value="" style="color: #777;">Select League</option>
+                </select>
+                <select class="form-select" id="redside-team-selector" style="padding: 10px; border-radius: 8px; border: 1px solid #ddd; background-color: #fff; font-size: 16px; color: #333;">
+                    <option value="" style="color: #777;">Select Team</option>
+                </select>
+            </div>
+
+            <div class="card shadow">
+                <div class="card-header text-white" data-bs-toggle="collapse" data-bs-target="#redPanel" style="cursor: pointer; font-weight: bolder; background-color: #f70808;">
+                    Redside team
+                </div>
+
+                <div id="redPanel" class="collapse show">
+                    <div class="card-body">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tbody>
+                                <tr>
+                                    <td style="font-weight: bold;">Wins / Losses</td>
+                                    <td id="redside-wl">-</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: bold;">Win Rate</td>
+                                    <td id="redside-winrate">-</td>
+                                </tr>
+                                <tr class="table-subheading">
+                                    <td> • Blue side winrate: </td>
+                                    <td id="redside-blue-side-winrate"> - </td>
+                                </tr>  
+                                <tr class="table-subheading">
+                                    <td> • Red side winrate: </td>
+                                    <td id="redside-red-side-winrate"> - </td>
+                                </tr>  
+                                <tr>
+                                    <td style="font-weight: bold;">Games Played</td>
+                                    <td id="redside-games-played">-</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: bold;">Average game length (min)</td>
+                                    <td id="redside-avg-game-length">-</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: bold;">Average dragons per Game</td>
+                                    <td id="redside-avg-dragons">-</td>
+                                </tr>
+                                <tr class="table-subheading global-stat">
+                                    <td> • Global average dragons per game: </td>
+                                    <td id="redside-g-avg-dragons"> - </td>
+                                </tr> 
+                                <tr>
+                                    <td style="font-weight: bold;">Average barons per game</td>
+                                    <td id="redside-avg-barons">-</td>
+                                </tr>
+                                <tr class="table-subheading global-stat">
+                                    <td> • Global average barons per game: </td>
+                                    <td id="redside-g-avg-barons"> - </td>
+                                </tr>  
+                                <tr>
+                                    <td style="font-weight: bold;">Average heralds per game</td>
+                                    <td id="redside-avg-heralds">-</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: bold;">Average towers destroyed</td>
+                                    <td id="redside-avg-towers">-</td>
+                                </tr>
+                                <tr class="table-subheading global-stat">
+                                    <td> • Global average towers per game: </td>
+                                    <td id="redside-g-avg-towers"> - </td>
+                                </tr>
+                                <tr class="table-subheading">
+                                    <td> • Average turret plates taken: </td>
+                                    <td id="redside-tp-taken"> - </td>
+                                </tr>
+                                <tr class="table-subheading">
+                                    <td> • First tower percentage: </td>
+                                    <td id="redside-ft-percentage"> - </td>
+                                </tr>
+                                <tr class="table-subheading">
+                                    <td> • First mid tower percentage: </td>
+                                    <td id="redside-fmt-percentage"> - </td>
+                                </tr>
+                                <tr class="table-subheading">
+                                    <td> • First to three towers percentage:</td>
+                                    <td id="redside-fttt-percentage"> - </td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: bold;">Average kills</td>
+                                    <td id="redside-avg-kills">-</td>
+                                </tr>
+                                <tr class="table-subheading global-stat">
+                                    <td> • Global average kills:</td>
+                                    <td id="redside-g-avg-kills"> - </td>
+                                </tr>
+                                <tr class="table-subheading">
+                                    <td> • First blood percentage:</td>
+                                    <td id="redside-fb-percentage"> - </td>
+                                </tr>
+                                <tr class="table-subheading">
+                                    <td> • First blood victim percentage:</td>
+                                    <td id="redside-fbv-percentage"> - </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top player -->
+            <div style="margin-top: 1rem;">
+                <td style="border: 1px solid #e0e0e0; padding: 10px; border-radius: 12px; width: 100%; margin-top: 10px; background-color: #f9f9f9; box-sizing: border-box;">
+                    <!-- Player Name Table -->
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr>
+                                <th colspan="3" style="border: 1px solid #ddd; padding: 10px; text-align: center; background-color: #007bff; color: white; font-size: 18px; border-radius: 8px;" id="redside-top-player-name">Top</th>
+                            </tr>
+                        </thead>
+                    </table>
+                
+                    <div style="margin-top: 0.5rem; margin-bottom: 0.5rem;">
+                        <select id="redside-top-champion-select" style="width: 100%; padding: 0.5rem; border-radius: 8px; border: 1px solid #ddd; background-color: #fff; font-size: 16px; color: #333;">
+                            <option value="" style="color: #777;">Select Champion</option>
+                        </select>
+                    </div>
+                
+                    <!-- Container for Game Stats + KDA -->
+                    <div style="display: flex; flex-direction: row; gap: 1rem; margin-top: 1rem;">
+                        <!-- Game Stats Table -->
+                        <table style="border-collapse: collapse; flex: 1; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);">
+                            <thead>
+                                <tr>
+                                    <th colspan="3" style="border: 1px solid #ddd; padding: 10px; background-color: #007bff; color: white; text-align: center; border-radius: 8px;">Game Stats</th>
+                                </tr>
+                            </thead>
+                            <tr>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Wins</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Loses</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Games Played</th>
+                            </tr>
+                            <tr>
+                                <th style="text-align: start; padding: 10px;" id="redside-top-player-wins">Wins</th>
+                                <th style="text-align: start; padding: 10px;" id="redside-top-player-loses">Loses</th>
+                                <th style="text-align: start; padding: 10px;" id="redside-top-player-games-played">Games played</th>
+                            </tr>
+                        </table>
+                
+                        <!-- KDA Table -->
+                        <table style="border-collapse: collapse; flex: 1; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);">
+                            <thead>
+                                <tr>
+                                    <th colspan="3" style="border: 1px solid #ddd; padding: 10px; background-color: #007bff; color: white; text-align: center; border-radius: 8px;">KDA</th>
+                                </tr>
+                            </thead>
+                            <tr>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Kills</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Deaths</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Assists</th>
+                            </tr>
+                            <tr>
+                                <th style="text-align: start; padding: 10px;" id="redside-top-player-kills">Kills</th>
+                                <th style="text-align: start; padding: 10px;" id="redside-top-player-deaths">Deaths</th>
+                                <th style="text-align: start; padding: 10px;" id="redside-top-player-assists">Assists</th>
+                            </tr>
+                        </table>
+                    </div>
+                
+                    <!-- Container for Champion-Specific Stats -->
+                    <div style="display: flex; flex-direction: row; gap: 1rem; margin-top: 1rem;">
+                        <!-- Champion Stats Table -->
+                        <table style="border-collapse: collapse; flex: 1; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);">
+                            <thead>
+                                <tr>
+                                    <th colspan="3" style="border: 1px solid #ddd; padding: 10px; background-color: #007bff; color: white; text-align: center; border-radius: 8px;">Champion Stats</th>
+                                </tr>
+                            </thead>
+                            <tr>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Kills</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Wins</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Games Played</th>
+                            </tr>
+                            <tr>
+                                <th style="text-align: start; padding: 10px;" id="redside-top-champion-kills">Kills</th>
+                                <th style="text-align: start; padding: 10px;" id="redside-top-champion-wins">Wins</th>
+                                <th style="text-align: start; padding: 10px;" id="redside-top-champion-games-played">Games played</th>
+                            </tr>
+                        </table>
+                
+                        <!-- Additional Champion Metrics Table -->
+                        <table style="border-collapse: collapse; flex: 1; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);">
+                            <thead>
+                                <tr>
+                                    <th colspan="3" style="border: 1px solid #ddd; padding: 10px; background-color: #007bff; color: white; text-align: center; border-radius: 8px;">Additional Champion Metrics</th>
+                                </tr>
+                            </thead>
+                            <tr>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Average KDA</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Win Rate</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Pick Rate</th>
+                            </tr>
+                            <tr>
+                                <th style="text-align: start; padding: 10px;" id="redside-top-champion-average-kda">KDA</th>
+                                <th style="text-align: start; padding: 10px;" id="redside-top-champion-win-rate">Win Rate</th>
+                                <th style="text-align: start; padding: 10px;" id="redside-top-champion-pick-rate">Pick Rate</th>
+                            </tr>
+                        </table>
+                    </div>
+                </td>
+            </div>
+            
+            <!-- Jungle Position -->
+            <div style="margin-top: 1rem;">
+                <td style="border: 1px solid #e0e0e0; padding: 10px; border-radius: 12px; width: 100%; margin-top: 10px; background-color: #f9f9f9; box-sizing: border-box;">
+                    <!-- Player Name Table -->
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr>
+                                <th colspan="3" style="border: 1px solid #ddd; padding: 10px; text-align: center; background-color: #28a745; color: white; font-size: 18px; border-radius: 8px;" id="redside-jng-player-name">Jungle</th>
+                            </tr>
+                        </thead>
+                    </table>
+
+                    <div style="margin-top: 0.5rem; margin-bottom: 0.5rem;">
+                        <select id="redside-jng-champion-select" style="width: 100%; padding: 0.5rem; border-radius: 8px; border: 1px solid #ddd; background-color: #fff; font-size: 16px; color: #333;">
+                            <option value="" style="color: #777;">Select Champion</option>
+                        </select>
+                    </div>
+
+                    <!-- Container for Game Stats + KDA -->
+                    <div style="display: flex; flex-direction: row; gap: 1rem; margin-top: 1rem;">
+                        <!-- Game Stats Table -->
+                        <table style="border-collapse: collapse; flex: 1; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);">
+                            <thead>
+                                <tr>
+                                    <th colspan="3" style="border: 1px solid #ddd; padding: 10px; background-color: #28a745; color: white; text-align: center; border-radius: 8px;">Game Stats</th>
+                                </tr>
+                            </thead>
+                            <tr>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Wins</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Loses</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Games Played</th>
+                            </tr>
+                            <tr>
+                                <th style="text-align: start; padding: 10px;" id="redside-jng-player-wins">Wins</th>
+                                <th style="text-align: start; padding: 10px;" id="redside-jng-player-loses">Loses</th>
+                                <th style="text-align: start; padding: 10px;" id="redside-jng-player-games-played">Games played</th>
+                            </tr>
+                        </table>
+
+                        <!-- KDA Table -->
+                        <table style="border-collapse: collapse; flex: 1; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);">
+                            <thead>
+                                <tr>
+                                    <th colspan="3" style="border: 1px solid #ddd; padding: 10px; background-color: #28a745; color: white; text-align: center; border-radius: 8px;">KDA</th>
+                                </tr>
+                            </thead>
+                            <tr>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Kills</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Deaths</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Assists</th>
+                            </tr>
+                            <tr>
+                                <th style="text-align: start; padding: 10px;" id="redside-jng-player-kills">Kills</th>
+                                <th style="text-align: start; padding: 10px;" id="redside-jng-player-deaths">Deaths</th>
+                                <th style="text-align: start; padding: 10px;" id="redside-jng-player-assists">Assists</th>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- Container for Champion-Specific Stats -->
+                    <div style="display: flex; flex-direction: row; gap: 1rem; margin-top: 1rem;">
+                        <!-- Champion Stats Table -->
+                        <table style="border-collapse: collapse; flex: 1; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);">
+                            <thead>
+                                <tr>
+                                    <th colspan="3" style="border: 1px solid #ddd; padding: 10px; background-color: #28a745; color: white; text-align: center; border-radius: 8px;">Champion Stats</th>
+                                </tr>
+                            </thead>
+                            <tr>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Kills</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Wins</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Games Played</th>
+                            </tr>
+                            <tr>
+                                <th style="text-align: start; padding: 10px;" id="redside-jng-champion-kills">Kills</th>
+                                <th style="text-align: start; padding: 10px;" id="redside-jng-champion-wins">Wins</th>
+                                <th style="text-align: start; padding: 10px;" id="redside-jng-champion-games-played">Games played</th>
+                            </tr>
+                        </table>
+
+                        <!-- Additional Champion Metrics Table -->
+                        <table style="border-collapse: collapse; flex: 1; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);">
+                            <thead>
+                                <tr>
+                                    <th colspan="3" style="border: 1px solid #ddd; padding: 10px; background-color: #28a745; color: white; text-align: center; border-radius: 8px;">Additional Champion Metrics</th>
+                                </tr>
+                            </thead>
+                            <tr>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Average KDA</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Win Rate</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Pick Rate</th>
+                            </tr>
+                            <tr>
+                                <th style="text-align: start; padding: 10px;" id="redside-jng-champion-average-kda">KDA</th>
+                                <th style="text-align: start; padding: 10px;" id="redside-jng-champion-win-rate">Win Rate</th>
+                                <th style="text-align: start; padding: 10px;" id="redside-jng-champion-pick-rate">Pick Rate</th>
+                            </tr>
+                        </table>
+                    </div>
+                </td>
+            </div>
+
+            <!-- Mid Position -->
+            <div style="margin-top: 1rem;">
+                <td style="border: 1px solid #e0e0e0; padding: 10px; border-radius: 12px; width: 100%; margin-top: 10px; background-color: #f9f9f9; box-sizing: border-box;">
+                    <!-- Player Name Table -->
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr>
+                                <th colspan="3" style="border: 1px solid #ddd; padding: 10px; text-align: center; background-color: #6610f2; color: white; font-size: 18px; border-radius: 8px;" id="redside-mid-player-name">Mid</th>
+                            </tr>
+                        </thead>
+                    </table>
+
+                    <div style="margin-top: 0.5rem; margin-bottom: 0.5rem;">
+                        <select id="redside-mid-champion-select" style="width: 100%; padding: 0.5rem; border-radius: 8px; border: 1px solid #ddd; background-color: #fff; font-size: 16px; color: #333;">
+                            <option value="" style="color: #777;">Select Champion</option>
+                        </select>
+                    </div>
+
+                    <!-- Container for Game Stats + KDA -->
+                    <div style="display: flex; flex-direction: row; gap: 1rem; margin-top: 1rem;">
+                        <!-- Game Stats Table -->
+                        <table style="border-collapse: collapse; flex: 1; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);">
+                            <thead>
+                                <tr>
+                                    <th colspan="3" style="border: 1px solid #ddd; padding: 10px; background-color: #6610f2; color: white; text-align: center; border-radius: 8px;">Game Stats</th>
+                                </tr>
+                            </thead>
+                            <tr>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Wins</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Loses</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Games Played</th>
+                            </tr>
+                            <tr>
+                                <th style="text-align: start; padding: 10px;" id="redside-mid-player-wins">Wins</th>
+                                <th style="text-align: start; padding: 10px;" id="redside-mid-player-loses">Loses</th>
+                                <th style="text-align: start; padding: 10px;" id="redside-mid-player-games-played">Games played</th>
+                            </tr>
+                        </table>
+
+                        <!-- KDA Table -->
+                        <table style="border-collapse: collapse; flex: 1; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);">
+                            <thead>
+                                <tr>
+                                    <th colspan="3" style="border: 1px solid #ddd; padding: 10px; background-color: #6610f2; color: white; text-align: center; border-radius: 8px;">KDA</th>
+                                </tr>
+                            </thead>
+                            <tr>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Kills</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Deaths</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Assists</th>
+                            </tr>
+                            <tr>
+                                <th style="text-align: start; padding: 10px;" id="redside-mid-player-kills">Kills</th>
+                                <th style="text-align: start; padding: 10px;" id="redside-mid-player-deaths">Deaths</th>
+                                <th style="text-align: start; padding: 10px;" id="redside-mid-player-assists">Assists</th>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- Container for Champion-Specific Stats -->
+                    <div style="display: flex; flex-direction: row; gap: 1rem; margin-top: 1rem;">
+                        <!-- Champion Stats Table -->
+                        <table style="border-collapse: collapse; flex: 1; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);">
+                            <thead>
+                                <tr>
+                                    <th colspan="3" style="border: 1px solid #ddd; padding: 10px; background-color: #6610f2; color: white; text-align: center; border-radius: 8px;">Champion Stats</th>
+                                </tr>
+                            </thead>
+                            <tr>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Kills</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Wins</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Games Played</th>
+                            </tr>
+                            <tr>
+                                <th style="text-align: start; padding: 10px;" id="redside-mid-champion-kills">Kills</th>
+                                <th style="text-align: start; padding: 10px;" id="redside-mid-champion-wins">Wins</th>
+                                <th style="text-align: start; padding: 10px;" id="redside-mid-champion-games-played">Games played</th>
+                            </tr>
+                        </table>
+
+                        <!-- Additional Champion Metrics Table -->
+                        <table style="border-collapse: collapse; flex: 1; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);">
+                            <thead>
+                                <tr>
+                                    <th colspan="3" style="border: 1px solid #ddd; padding: 10px; background-color: #6610f2; color: white; text-align: center; border-radius: 8px;">Additional Champion Metrics</th>
+                                </tr>
+                            </thead>
+                            <tr>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Average KDA</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Win Rate</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Pick Rate</th>
+                            </tr>
+                            <tr>
+                                <th style="text-align: start; padding: 10px;" id="redside-mid-champion-average-kda">KDA</th>
+                                <th style="text-align: start; padding: 10px;" id="redside-mid-champion-win-rate">Win Rate</th>
+                                <th style="text-align: start; padding: 10px;" id="redside-mid-champion-pick-rate">Pick Rate</th>
+                            </tr>
+                        </table>
+                    </div>
+                </td>
+            </div>
+
+            <!-- Bot Position -->
+            <div style="margin-top: 1rem;">
+                <td style="border: 1px solid #e0e0e0; padding: 10px; border-radius: 12px; width: 100%; margin-top: 10px; background-color: #f9f9f9; box-sizing: border-box;">
+                    <!-- Player Name Table -->
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr>
+                                <th colspan="3" style="border: 1px solid #ddd; padding: 10px; text-align: center; background-color: #e83e8c; color: white; font-size: 18px; border-radius: 8px;" id="redside-bot-player-name">Bot</th>
+                            </tr>
+                        </thead>
+                    </table>
+
+                    <div style="margin-top: 0.5rem; margin-bottom: 0.5rem;">
+                        <select id="redside-bot-champion-select" style="width: 100%; padding: 0.5rem; border-radius: 8px; border: 1px solid #ddd; background-color: #fff; font-size: 16px; color: #333;">
+                            <option value="" style="color: #777;">Select Champion</option>
+                        </select>
+                    </div>
+
+                    <!-- Container for Game Stats + KDA -->
+                    <div style="display: flex; flex-direction: row; gap: 1rem; margin-top: 1rem;">
+                        <!-- Game Stats Table -->
+                        <table style="border-collapse: collapse; flex: 1; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);">
+                            <thead>
+                                <tr>
+                                    <th colspan="3" style="border: 1px solid #ddd; padding: 10px; background-color: #e83e8c; color: white; text-align: center; border-radius: 8px;">Game Stats</th>
+                                </tr>
+                            </thead>
+                            <tr>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Wins</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Loses</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Games Played</th>
+                            </tr>
+                            <tr>
+                                <th style="text-align: start; padding: 10px;" id="redside-bot-player-wins">Wins</th>
+                                <th style="text-align: start; padding: 10px;" id="redside-bot-player-loses">Loses</th>
+                                <th style="text-align: start; padding: 10px;" id="redside-bot-player-games-played">Games played</th>
+                            </tr>
+                        </table>
+
+                        <!-- KDA Table -->
+                        <table style="border-collapse: collapse; flex: 1; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);">
+                            <thead>
+                                <tr>
+                                    <th colspan="3" style="border: 1px solid #ddd; padding: 10px; background-color: #e83e8c; color: white; text-align: center; border-radius: 8px;">KDA</th>
+                                </tr>
+                            </thead>
+                            <tr>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Kills</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Deaths</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Assists</th>
+                            </tr>
+                            <tr>
+                                <th style="text-align: start; padding: 10px;" id="redside-bot-player-kills">Kills</th>
+                                <th style="text-align: start; padding: 10px;" id="redside-bot-player-deaths">Deaths</th>
+                                <th style="text-align: start; padding: 10px;" id="redside-bot-player-assists">Assists</th>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- Container for Champion-Specific Stats -->
+                    <div style="display: flex; flex-direction: row; gap: 1rem; margin-top: 1rem;">
+                        <!-- Champion Stats Table -->
+                        <table style="border-collapse: collapse; flex: 1; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);">
+                            <thead>
+                                <tr>
+                                    <th colspan="3" style="border: 1px solid #ddd; padding: 10px; background-color: #e83e8c; color: white; text-align: center; border-radius: 8px;">Champion Stats</th>
+                                </tr>
+                            </thead>
+                            <tr>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Kills</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Wins</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Games Played</th>
+                            </tr>
+                            <tr>
+                                <th style="text-align: start; padding: 10px;" id="redside-bot-champion-kills">Kills</th>
+                                <th style="text-align: start; padding: 10px;" id="redside-bot-champion-wins">Wins</th>
+                                <th style="text-align: start; padding: 10px;" id="redside-bot-champion-games-played">Games played</th>
+                            </tr>
+                        </table>
+
+                        <!-- Additional Champion Metrics Table -->
+                        <table style="border-collapse: collapse; flex: 1; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);">
+                            <thead>
+                                <tr>
+                                    <th colspan="3" style="border: 1px solid #ddd; padding: 10px; background-color: #e83e8c; color: white; text-align: center; border-radius: 8px;">Additional Champion Metrics</th>
+                                </tr>
+                            </thead>
+                            <tr>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Average KDA</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Win Rate</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Pick Rate</th>
+                            </tr>
+                            <tr>
+                                <th style="text-align: start; padding: 10px;" id="redside-bot-champion-average-kda">KDA</th>
+                                <th style="text-align: start; padding: 10px;" id="redside-bot-champion-win-rate">Win Rate</th>
+                                <th style="text-align: start; padding: 10px;" id="redside-bot-champion-pick-rate">Pick Rate</th>
+                            </tr>
+                        </table>
+                    </div>
+                </td>
+            </div>
+
+            <!-- Support Position -->
+            <div style="margin-top: 1rem;">
+                <td style="border: 1px solid #e0e0e0; padding: 10px; border-radius: 12px; width: 100%; margin-top: 10px; background-color: #f9f9f9; box-sizing: border-box;">
+                    <!-- Player Name Table -->
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr>
+                                <th colspan="3" style="border: 1px solid #ddd; padding: 10px; text-align: center; background-color: #17a2b8; color: white; font-size: 18px; border-radius: 8px;" id="redside-sup-player-name">Support</th>
+                            </tr>
+                        </thead>
+                    </table>
+
+                    <div style="margin-top: 0.5rem; margin-bottom: 0.5rem;">
+                        <select id="redside-sup-champion-select" style="width: 100%; padding: 0.5rem; border-radius: 8px; border: 1px solid #ddd; background-color: #fff; font-size: 16px; color: #333;">
+                            <option value="" style="color: #777;">Select Champion</option>
+                        </select>
+                    </div>
+
+                    <!-- Container for Game Stats + KDA -->
+                    <div style="display: flex; flex-direction: row; gap: 1rem; margin-top: 1rem;">
+                        <!-- Game Stats Table -->
+                        <table style="border-collapse: collapse; flex: 1; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);">
+                            <thead>
+                                <tr>
+                                    <th colspan="3" style="border: 1px solid #ddd; padding: 10px; background-color: #17a2b8; color: white; text-align: center; border-radius: 8px;">Game Stats</th>
+                                </tr>
+                            </thead>
+                            <tr>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Wins</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Loses</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Games Played</th>
+                            </tr>
+                            <tr>
+                                <th style="text-align: start; padding: 10px;" id="redside-sup-player-wins">Wins</th>
+                                <th style="text-align: start; padding: 10px;" id="redside-sup-player-loses">Loses</th>
+                                <th style="text-align: start; padding: 10px;" id="redside-sup-player-games-played">Games played</th>
+                            </tr>
+                        </table>
+
+                        <!-- KDA Table -->
+                        <table style="border-collapse: collapse; flex: 1; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);">
+                            <thead>
+                                <tr>
+                                    <th colspan="3" style="border: 1px solid #ddd; padding: 10px; background-color: #17a2b8; color: white; text-align: center; border-radius: 8px;">KDA</th>
+                                </tr>
+                            </thead>
+                            <tr>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Kills</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Deaths</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Assists</th>
+                            </tr>
+                            <tr>
+                                <th style="text-align: start; padding: 10px;" id="redside-sup-player-kills">Kills</th>
+                                <th style="text-align: start; padding: 10px;" id="redside-sup-player-deaths">Deaths</th>
+                                <th style="text-align: start; padding: 10px;" id="redside-sup-player-assists">Assists</th>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- Container for Champion-Specific Stats -->
+                    <div style="display: flex; flex-direction: row; gap: 1rem; margin-top: 1rem;">
+                        <!-- Champion Stats Table -->
+                        <table style="border-collapse: collapse; flex: 1; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);">
+                            <thead>
+                                <tr>
+                                    <th colspan="3" style="border: 1px solid #ddd; padding: 10px; background-color: #17a2b8; color: white; text-align: center; border-radius: 8px;">Champion Stats</th>
+                                </tr>
+                            </thead>
+                            <tr>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Kills</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Wins</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Games Played</th>
+                            </tr>
+                            <tr>
+                                <th style="text-align: start; padding: 10px;" id="redside-sup-champion-kills">Kills</th>
+                                <th style="text-align: start; padding: 10px;" id="redside-sup-champion-wins">Wins</th>
+                                <th style="text-align: start; padding: 10px;" id="redside-sup-champion-games-played">Games played</th>
+                            </tr>
+                        </table>
+
+                        <!-- Additional Champion Metrics Table -->
+                        <table style="border-collapse: collapse; flex: 1; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);">
+                            <thead>
+                                <tr>
+                                    <th colspan="3" style="border: 1px solid #ddd; padding: 10px; background-color: #17a2b8; color: white; text-align: center; border-radius: 8px;">Additional Champion Metrics</th>
+                                </tr>
+                            </thead>
+                            <tr>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Average KDA</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Win Rate</th>
+                                <th style="text-align: start; padding: 10px; background-color: #f8f8f8;">Champion Pick Rate</th>
+                            </tr>
+                            <tr>
+                                <th style="text-align: start; padding: 10px;" id="redside-sup-champion-average-kda">KDA</th>
+                                <th style="text-align: start; padding: 10px;" id="redside-sup-champion-win-rate">Win Rate</th>
+                                <th style="text-align: start; padding: 10px;" id="redside-sup-champion-pick-rate">Pick Rate</th>
+                            </tr>
+                        </table>
+                    </div>
+                </td>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/ui_setup.js"></script>
+</body>
+</html>         
