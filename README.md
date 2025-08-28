@@ -1,4 +1,4 @@
-# TFG - Bachelor’s Thesis: Machine learning model to predict the outcome of professional e-sports League of Legends matches:
+# TFG - Bachelor’s Thesis: Machine learning models to predict the outcome of professional e-sports League of Legends matches:
 ## Video proof of it working:
 ![Demo_gif](media/video_gif.gif)<br>
 [In video format](media/video.mp4)
