@@ -11,10 +11,10 @@
 
 ## How does it work:
 ### A general view:
-![Description](media/basic_schema.JPG)
+![Description](media/basic_schema.jpg)
 
-- With `CSVUpdater.py`, Oracle's Elixir datasets are automatically downloaded or updated.
-- The two models are trained using the data collected from these datasets, using all matches from 2014 to 2025 (excluding malformed ones). This data is then processed and indexed into a local mongoDB instance.
+- With `CSVUpdater.py`, Oracle's Elixir datasets are automatically downloaded or updated. This data is then processed and indexed into a local mongoDB instance.
+- The two models are trained using the data collected from these datasets, using all matches from 2014 to 2025 (excluding malformed ones). 
 - RestAPI.py contains a Flask application (Rest API) that has includes `POST /get_all_predictions`, which when queried with the appropiate draft data will return the winrate percentages predicted for each model (RandomForest and XGBoost).
 - The frontend displays the resulting predicted values.
 
