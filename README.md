@@ -1,7 +1,7 @@
 # TFG - Bachelor’s Thesis: Machine learning model to predict the outcome of professional e-sports League of Legends matches:
 ## Video proof of it working:
-![Demo_gif](video_gif.gif)<br>
-[In video format](video.mp4)
+![Demo_gif](media/video_gif.gif)<br>
+[In video format](media/video.mp4)
 
 ## Requirements:
 - Python 3.9+  
@@ -11,7 +11,7 @@
 
 ## How does it work:
 ### A general view:
-![Description](basic_schema.JPG)
+![Description](media/basic_schema.JPG)
 
 - With `CSVUpdater.py`, Oracle's Elixir datasets are automatically downloaded or updated.
 - The two models are trained using the data collected from these datasets, using all matches from 2014 to 2025 (excluding malformed ones). This data is then processed and indexed into a local mongoDB instance.
@@ -60,16 +60,52 @@
 
 ## Project structure:
 - `API`:
-  - League (Moved to the InProgress folder): Contains the crawler and respective endpoints for the Riot Games API - this includes account data, match data and others.
+  - LeagueCrawler (Moved to the InProgress folder): Contains the crawler and respective endpoints for the Riot Games API - this includes account data, match data and others.
+    - AccountV1.py 
+    - LeagueV4.py
+    - MatchV5.py
+    - SummonerV4.py
+    - BaseAPI.py
+    - Crawler.py
   - Flask: Contains the RestAPI flask application used by the frontend to retrieve multiple types of data.
+    - RestAPI.py 
   - MongoDB: Contains all the necessary files that conduct operations from and into the local mongo instance.
+    - Cache: This is where the needed information is indexed.
+      - Formatters: These files format the entries appropiately before inserting them into the mongo instance.
+        - MatchFormatter.py
+        - PlayerFormatter.py
+        - TeamFormatter.py
+        - TrainingEntryFormatter.py
+      - MongoCache.py
+    - CollectionAPIs: This conduct operations over their respective collections.
+      - GeneralCollection.py
+      - MatchCollection.py
+      - PlayerCollection.py
+      - TeamCollection.py
+    - CSVUpdater.py
+    - MongoConnector.py
+    - MongoManager.py
+    - MongoUtils.py
+- `Datasets`: Contains the CSV datasets downloaded from OraclesElixir.
 - `Models`:
   - RandomForest: Contains the file necessary to train and use the RandomForest model plus a cache of its encoder and pretrained model.
+    -  RandomForest.py
+    -  RandomForest_encoder.pkl
+    -  RandomForest_model.pkl
   - XGBoost: Same as the RandomForest model, but for XGBoost.
+    - XGBoost.py
+    - XGBoost_encoder.pkl
+    - XGBoost_features.pkl
+    - XGBoost_model.pkl
+  - DraftInput.py
+  - ModelAPI.py
+  - PredictionAPI.py
+  - TrainingEntriesGenerator.py
 - `InProgress`: Contains all files that are being re-formatted, added or updated.
-  - LeagueCrawler
   - PydanticUpdate: Contains the new object structure that uses pydantic and further data.
 - `Utils`: Contains Utils.py (file that contains a bunch of utilitarian functions) and the old custom MongoConnector.
+  - Utils.py
+  - MongoConnector_OLD.py 
 
 ## Planned/ongoing improvements:
 - Migration from dictionary-based processing -> Pydantic models for faster validation.
